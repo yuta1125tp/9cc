@@ -1,0 +1,9 @@
+# vscode
+/.vscode
+
+# c
+*~
+*.o
+tmp*
+9cc
+
