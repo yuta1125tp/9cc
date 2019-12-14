@@ -12,6 +12,12 @@ typedef enum
   ND_SUB, // -
   ND_MUL, // *
   ND_DIV, // /
+  ND_LES, // <
+  ND_GRE, // >
+  ND_LEQ, // <=
+  ND_GEQ, // >=
+  ND_EQU, // ==
+  ND_NEQ, // !=
   ND_NUM, // 整数
 } NodeKind;
 
@@ -74,6 +80,28 @@ void gen(Node *node)
     printf("  cqo\n");
     printf("  idiv rdi\n");
     break;
+  case ND_LES:
+  case ND_GRE:
+    printf("  cmp rax, rdi\n");
+    printf("  setl al\n");
+    printf("  movzb rax, al\n");
+    break;
+  case ND_LEQ:
+  case ND_GEQ:
+    printf("  cmp rax, rdi\n");
+    printf("  setle al\n");
+    printf("  movzb rax, al\n");
+    break;
+  case ND_EQU:
+    printf("  cmp rax, rdi\n");
+    printf("  sete al\n");
+    printf("  movzb rax, al\n");
+    break;
+  case ND_NEQ:
+    printf("  cmp rax, rdi\n");
+    printf("  setne al\n");
+    printf("  movzb rax, al\n");
+    break;
   }
 
   printf("  push rax\n");
@@ -96,6 +124,7 @@ struct Token
   Token *next;    // 次の入力トークン
   int val;        // kindがTK_NUMの場合、その数値
   char *str;      // トークン文字列（エラーメッセージ用）
+  int len;        // トークンの長さ
 };
 
 // 現在着目しているトークン
@@ -132,9 +161,12 @@ void error(char *fmt, ...)
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
-bool consume(char op)
+bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
+  int a = strlen(op);
+  int b = strlen(&op);
+
+  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
     return false;
   token = token->next;
   return true;
@@ -142,10 +174,10 @@ bool consume(char op)
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
-bool expect(char op)
+bool expect(char *op)
 {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
-    error_at(token->str, "'%c'ではありません", op);
+  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+    error_at(token->str, "'%c'ではありません", &op);
   token = token->next;
 }
 
@@ -168,18 +200,58 @@ bool at_eof()
 // 抽象構文木のパーザー
 // 宣言
 Node *expr();
+Node *equality();
+Node *relational();
+Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
 
 Node *expr()
 {
+  Node *node = equality();
+}
+
+Node *equality()
+{
+  Node *node = relational();
+  for (;;)
+  {
+    if (consume("=="))
+      node = new_node(ND_EQU, node, relational());
+    else if (consume("!="))
+      node = new_node(ND_NEQ, node, relational());
+    else
+      return node;
+  }
+}
+
+Node *relational()
+{
+  Node *node = add();
+  for (;;)
+  {
+    if (consume("<="))
+      node = new_node(ND_LEQ, node, add());
+    else if (consume("<"))
+      node = new_node(ND_LES, node, add());
+    else if (consume(">="))
+      node = new_node(ND_GEQ, add(), node);
+    else if (consume(">"))
+      node = new_node(ND_GRE, add(), node);
+    else
+      return node;
+  }
+}
+
+Node *add()
+{
   Node *node = mul();
   for (;;)
   {
-    if (consume('+'))
+    if (consume("+"))
       node = new_node(ND_ADD, node, mul());
-    else if (consume('-'))
+    else if (consume("-"))
       node = new_node(ND_SUB, node, mul());
     else
       return node;
@@ -191,9 +263,9 @@ Node *mul()
   Node *node = unary();
   for (;;)
   {
-    if (consume('*'))
+    if (consume("*"))
       node = new_node(ND_MUL, node, unary());
-    else if (consume('/'))
+    else if (consume("/"))
       node = new_node(ND_DIV, node, unary());
     else
       return node;
@@ -203,12 +275,12 @@ Node *mul()
 // 単項に関するパーザー
 Node *unary()
 {
-  if (consume('+'))
+  if (consume("+"))
   {
     // +x -> x
     return primary();
   }
-  else if(consume('-'))
+  else if (consume("-"))
   {
     // -x -> 0-x
     return new_node(ND_SUB, new_node_num(0), primary());
@@ -219,10 +291,10 @@ Node *unary()
 Node *primary()
 {
   // 次のトークンが"("なら"(" expr ")"のはず
-  if (consume('('))
+  if (consume("("))
   {
     Node *node = expr();
-    expect(')');
+    expect(")");
     return node;
   }
   // そうでなければ数字のはず
@@ -256,9 +328,21 @@ Token *tokenize()
       continue;
     }
 
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')')
+    if (memcmp(p, ">=", 2) == 0 ||
+        memcmp(p, "<=", 2) == 0 ||
+        memcmp(p, "==", 2) == 0 ||
+        memcmp(p, "!=", 2) == 0)
+    {
+      cur = new_token(TK_RESERVED, cur, p);
+      cur->len = 2;
+      p += 2;
+      continue;
+    }
+
+    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<')
     {
       cur = new_token(TK_RESERVED, cur, p++);
+      cur->len = 1;
       continue;
     }
 

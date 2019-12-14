@@ -11,7 +11,7 @@ try() {
   if [ "$actual" = "$expected" ]; then
     echo "$input => $actual"
   else
-    echo "$expected expected, but got $actual"
+    echo "input was $input, $expected expected, but got $actual"
     exit 1
   fi
 }
@@ -27,5 +27,24 @@ try 22 " 12 + 5 *2 "
 try 34 " ( 12 + 5) *2 "
 try 10 "-10+20"
 try 10 "(-10)+20"
+
+try 2 "1+(1<10)"
+try 2 "(1<=10)+1"
+try 2 "(10>=1)+1"
+try 1 "1+(1>10)"
+try 2 "(10>1)+1"
+try 2 "(10==10)+1"
+try 2 "(10!=1)+1"
+try 1 "1+(10<10)"
+try 0 "-(10<=10)+1"
+try 1 "1+(10>10)"
+try 0 "-(10>=10)+1"
+
+try 1 "(100<10)+1"
+try 1 "(100<=10)+1"
+try 1 "(10>100)+1"
+try 1 "(10>=100)+1"
+try 1 "(10==1000)+1"
+try 1 "(10!=10)+1"
 
 echo OK
