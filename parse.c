@@ -15,6 +15,14 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
   return node;
 }
 
+Node *new_node_ident(char c)
+{
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+  node->val = c-'a';
+  return node;
+}
+
 // 新しいノードを作成する関数（整数ノード）
 Node *new_node_num(int val)
 {
@@ -43,6 +51,15 @@ bool expect(char *op)
   token = token->next;
 }
 
+// 次のトークンが数値の場合に真を返す、数字じゃないなら偽を返す。
+bool consume_number()
+{
+  if (token->kind == TK_NUM)
+    return true;
+  else;
+    return false;
+}
+
 // 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
 // それ以外の場合にはエラーを報告する。
 int expect_number()
@@ -54,24 +71,47 @@ int expect_number()
   return val;
 }
 
+// 次のトークンが識別子の場合、トークンを1つ読み進めてそのトークンを返す。
+// それ以外の場合にはnullを返す。外でboolで確認して読み飛ばす
+Token* consume_ident()
+{
+  
+  if (token->kind != TK_IDENT)
+    return NULL;
+  Token *cur = token;
+  token = token->next;
+  return cur;
+}
+
+
 bool at_eof()
 {
   return token->kind == TK_EOF;
 }
 
-// // 抽象構文木のパーザー
-// // 宣言
-// Node *expr();
-// Node *equality();
-// Node *relational();
-// Node *add();
-// Node *mul();
-// Node *unary();
-// Node *primary();
+Node *assign() {
+  Node *node = equality();
+  if (consume("="))
+    node = new_node(ND_ASSIGN, node, assign());
+  return node;
+}
+
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+void program() {
+  int i = 0;
+  while (!at_eof())
+    code[i++] = stmt();
+  code[i] = NULL;
+}
 
 Node *expr()
 {
-  Node *node = equality();
+  return assign();
 }
 
 Node *equality()
@@ -159,6 +199,16 @@ Node *primary()
     expect(")");
     return node;
   }
+
+  // identかどうか確認する
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
+    return node;
+  }
+
   // そうでなければ数字のはず
   return new_node_num(expect_number());
 }
@@ -174,7 +224,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str)
 }
 
 // user_inputをトーカナイズしてそれを返す
-Token *tokenize()
+void tokenize()
 {
   char *p = user_input;
   Token head;
@@ -201,7 +251,18 @@ Token *tokenize()
       continue;
     }
 
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<')
+    if (
+      *p == '+'
+      || *p == '-'
+      || *p == '*'
+      || *p == '/'
+      || *p == '('
+      || *p == ')'
+      || *p == '>'
+      || *p == '<'
+      || *p=='='
+      || *p==';'
+      )
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
@@ -215,8 +276,14 @@ Token *tokenize()
       continue;
     }
 
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++);
+      cur->len = 1;
+      continue;
+    }
+
     error_at(p, "トーカナイズできません");
   }
   new_token(TK_EOF, cur, p);
-  return head.next;
+  token = head.next;
 }
