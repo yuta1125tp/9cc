@@ -12,6 +12,8 @@ char *user_input;
 // 入力プログラムのトーカナイズ結果
 Node *code[100];
 
+LVar *locals;
+
 int main(int argc, char **argv)
 {
   if (argc != 2)

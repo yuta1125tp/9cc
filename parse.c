@@ -5,6 +5,15 @@
 
 #include "9cc.h"
 
+// 変数を名前で検索する。見つからなかった場合はNULLを返す。
+LVar *find_lvar(Token *tok)
+{
+  for (LVar *var = locals; var; var = var->next)
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+      return var;
+  return NULL;
+}
+
 // 新しいノードを作成する関数
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
@@ -12,14 +21,6 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
   node->kind = kind;
   node->lhs = lhs;
   node->rhs = rhs;
-  return node;
-}
-
-Node *new_node_ident(char c)
-{
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_LVAR;
-  node->val = c-'a';
   return node;
 }
 
@@ -56,7 +57,7 @@ bool consume_number()
 {
   if (token->kind == TK_NUM)
     return true;
-  else;
+  else
     return false;
 }
 
@@ -73,7 +74,7 @@ int expect_number()
 
 // 次のトークンが識別子の場合、トークンを1つ読み進めてそのトークンを返す。
 // それ以外の場合にはnullを返す。外でboolで確認して読み飛ばす
-Token* consume_ident()
+Token *consume_ident()
 {
   
   if (token->kind != TK_IDENT)
@@ -83,26 +84,28 @@ Token* consume_ident()
   return cur;
 }
 
-
 bool at_eof()
 {
   return token->kind == TK_EOF;
 }
 
-Node *assign() {
+Node *assign()
+{
   Node *node = equality();
   if (consume("="))
     node = new_node(ND_ASSIGN, node, assign());
   return node;
 }
 
-Node *stmt() {
+Node *stmt()
+{
   Node *node = expr();
   expect(";");
   return node;
 }
 
-void program() {
+void program()
+{
   int i = 0;
   while (!at_eof())
     code[i++] = stmt();
@@ -202,10 +205,34 @@ Node *primary()
 
   // identかどうか確認する
   Token *tok = consume_ident();
-  if (tok) {
+  if (tok)
+  {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar)
+    {
+      node->offset = lvar->offset;
+    }
+    else
+    {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      if (locals)
+      {
+        lvar->offset = locals->offset + 8;
+      }
+      else
+      {
+        lvar->offset = 8;
+      }
+
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
     return node;
   }
 
@@ -221,6 +248,16 @@ Token *new_token(TokenKind kind, Token *cur, char *str)
   tok->str = str;
   cur->next = tok;
   return tok;
+}
+
+// 与えられた文字がトークンを構成する文字
+// すなわち英数字かアンダースコアかどうかを判定する関数
+int is_alnum(char c)
+{
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
 }
 
 // user_inputをトーカナイズしてそれを返す
@@ -260,8 +297,8 @@ void tokenize()
       || *p == ')'
       || *p == '>'
       || *p == '<'
-      || *p=='='
-      || *p==';'
+      || *p == '='
+      || *p == ';'
       )
     {
       cur = new_token(TK_RESERVED, cur, p++);
@@ -276,9 +313,23 @@ void tokenize()
       continue;
     }
 
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++);
-      cur->len = 1;
+    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6]))
+    {
+      new_token(TK_RETURN, cur, p);
+      p += 6;
+      continue;
+    }
+
+    if (is_alnum(*p))
+    {
+      int varlen = 0;
+      while (is_alnum(p[varlen]))
+      {
+        varlen += 1;
+      }
+      cur = new_token(TK_IDENT, cur, p);
+      cur->len = varlen;
+      p += varlen;
       continue;
     }
 

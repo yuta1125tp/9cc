@@ -1,21 +1,32 @@
+// ローカル変数
+typedef struct LVar LVar;
+
+// ローカル変数の型
+struct LVar
+{
+  LVar *next; // 次の変数かNULL
+  char *name; // 変数の名前
+  int len;    // 名前の長さ
+  int offset; // RBPからのオフセット
+};
+
 // 抽象構文木のノードの種類
 typedef enum
 {
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_LES, // <
-  ND_GRE, // >
-  ND_LEQ, // <=
-  ND_GEQ, // >=
-  ND_EQU, // ==
-  ND_NEQ, // !=
-  ND_NUM, // 整数
+  ND_ADD,    // +
+  ND_SUB,    // -
+  ND_MUL,    // *
+  ND_DIV,    // /
+  ND_LES,    // <
+  ND_GRE,    // >
+  ND_LEQ,    // <=
+  ND_GEQ,    // >=
+  ND_EQU,    // ==
+  ND_NEQ,    // !=
+  ND_NUM,    // 整数
   ND_ASSIGN, // =
   ND_LVAR,   // ローカル変数
 } NodeKind;
-
 
 typedef struct Node Node;
 
@@ -36,6 +47,7 @@ typedef enum
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
+  TK_RETURN,   // returnを表すトークン
 } TokenKind;
 
 typedef struct Token Token;
@@ -79,3 +91,6 @@ extern char *user_input;
 
 // 入力プログラムのトーカナイズ結果
 extern Node *code[100];
+
+// ローカル変数
+extern LVar *locals;

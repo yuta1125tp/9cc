@@ -51,4 +51,8 @@ try 14 "a = 3;
 b = 5 * 6 - 8;
 a + b / 2;"
 
+try 14 "foo = 3;
+bar = 5 * 6 - 8;
+foo + bar / 2;"
+
 echo OK
