@@ -10,7 +10,11 @@ $(OBJS): 9cc.h
 test: 9cc
 	./test.sh
 
+snippets:
+	cd snippets && $(MAKE)
+
 clean:
 	rm -f 9cc *.o *~ tmp*
+	cd snippets && $(MAKE) clean
 
 .PHONY: test clean
