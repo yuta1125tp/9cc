@@ -43,6 +43,16 @@ bool consume(char *op)
   return true;
 }
 
+// 次のトークンが期待している種類のときには、トークンを1つ読み進めて
+// 真を返す。それ以外の場合には偽を返す。
+bool consume_kind(int token_kind)
+{
+  if (token->kind != token_kind)
+    return false;
+  token = token->next;
+  return true;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 bool expect(char *op)
@@ -99,7 +109,19 @@ Node *assign()
 
 Node *stmt()
 {
-  Node *node = expr();
+  Node *node;
+
+  if (consume_kind(TK_RETURN))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  }
+  else
+  {
+    node = expr();
+  }
+
   expect(";");
   return node;
 }
