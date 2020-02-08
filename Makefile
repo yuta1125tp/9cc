@@ -6,7 +6,7 @@ SRCS2=$(wildcard snippets/*/*.c)
 OBJS2=$(SRCS2:.c=.s)
 
 9cc: $(OBJS)
-	$(CC) -o 9cc $(OBJS) $(LDFLAGS)
+	$(CC) -o 9cc $(OBJS) $(CFLAGS)
 
 $(OBJS): 9cc.h
 
