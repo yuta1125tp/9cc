@@ -2,10 +2,10 @@ CFLAGS=-std=c11 -g -static
 SRCS=$(wildcard */*.c)
 ASBS=$(SRCS:.c=.s)
 
-snaps:
+$(ASBS): $(SRCS)
 	$(CC) $(SRCS) -S -O0 -o $(ASBS) $(LDFLAGS)
 
 clean:
 	rm -f */*.s
 
-.PHONY: test snaps
+.PHONY: snippets
