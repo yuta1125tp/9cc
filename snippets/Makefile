@@ -1,4 +1,4 @@
-CFLAGS=-std=c11 -g -static
+CFLAGS=-std=c11
 
 all: ops/plus.s controls/if_0.s
 
