@@ -55,11 +55,23 @@ try() {
 # bar = 5 * 6 - 8;
 # foo + bar / 2;"
 
-try 2 "foo=1+(1>10); bar=foo+1; return bar;"
-try 25 "x = 4;
-foo = 3;
-bar = 5 * 6 - 8 + foo;
-return foo;
-return bar;"
+# try 2 "foo=1+(1>10); bar=foo+1; return bar;"
+# try 25 "x = 4;
+# foo = 3;
+# bar = 5 * 6 - 8 + foo;
+# return foo;
+# return bar;"
+
+try 0 "x = 1;
+if (x==4)
+  return x;
+else
+  return 0;"
+
+try 4 "x = 4;
+if (x==4)
+  return x;
+else
+  return 0;"
 
 echo OK

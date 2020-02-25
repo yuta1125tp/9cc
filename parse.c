@@ -55,7 +55,7 @@ bool consume_kind(int token_kind)
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
-bool expect(char *op)
+void expect(char *op)
 {
   if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
     error_at(token->str, "'%c'ではありません", &op);
@@ -86,7 +86,7 @@ int expect_number()
 // それ以外の場合にはnullを返す。外でboolで確認して読み飛ばす
 Token *consume_ident()
 {
-  
+
   if (token->kind != TK_IDENT)
     return NULL;
   Token *cur = token;
@@ -116,13 +116,28 @@ Node *stmt()
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+    expect(";");
+  }
+  else if (consume_kind(TK_IF))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    expect("(");
+    node->condition = expr();
+    expect(")");
+    node->lhs = stmt();
+    if (consume_kind(TK_ELSE))
+    {
+      node->kind = ND_IFELSE;
+      node->afterthought = stmt();
+    }
   }
   else
   {
     node = expr();
+    expect(";");
   }
 
-  expect(";");
   return node;
 }
 
@@ -311,17 +326,7 @@ void tokenize()
     }
 
     if (
-      *p == '+'
-      || *p == '-'
-      || *p == '*'
-      || *p == '/'
-      || *p == '('
-      || *p == ')'
-      || *p == '>'
-      || *p == '<'
-      || *p == '='
-      || *p == ';'
-      )
+        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';')
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
@@ -337,8 +342,36 @@ void tokenize()
 
     if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6]))
     {
-      new_token(TK_RETURN, cur, p);
+      cur = new_token(TK_RETURN, cur, p);
       p += 6;
+      continue;
+    }
+
+    if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2]))
+    {
+      cur = new_token(TK_IF, cur, p);
+      p += 2;
+      continue;
+    }
+
+    if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4]))
+    {
+      cur = new_token(TK_ELSE, cur, p);
+      p += 4;
+      continue;
+    }
+
+    if (strncmp(p, "while", 5) == 0 && !is_alnum(p[5]))
+    {
+      cur = new_token(TK_WHILE, cur, p);
+      p += 5;
+      continue;
+    }
+
+    if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3]))
+    {
+      cur = new_token(TK_FOR, cur, p);
+      p += 3;
       continue;
     }
 

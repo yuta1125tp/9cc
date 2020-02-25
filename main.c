@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     printf("  pop rax\n");
   }
 
-  // エピローグ 
+  // エピローグ
   // 最後の式の結果がRAXに残っているので、それを返り値する。
   printf("  mov rsp, rbp\n");
   printf("  pop rbp\n");

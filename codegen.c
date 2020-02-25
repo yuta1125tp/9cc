@@ -16,12 +16,25 @@ void gen(Node *node)
 {
   switch (node->kind)
   {
+  case ND_IF:
+    return;
+  case ND_IFELSE:
+    gen(node->condition); // スタックトップに結果が入っているはず
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lelse%03d\n", 1);
+    gen(node->lhs);
+    printf("  jmp .Lend%03d\n", 1);
+    printf(".Lelse%03d:\n", 1);
+    gen(node->afterthought);
+    printf(".Lend%03d:\n", 1);
+    return;
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");
-    printf("  mov rsb rbp\n");
+    printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
-    printf("  ret");
+    printf("  ret\n");
     return;
   case ND_NUM:
     printf("  push %d\n", node->val);
