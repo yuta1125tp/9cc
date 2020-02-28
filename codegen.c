@@ -83,6 +83,14 @@ void gen(Node *node)
     printf("  mov [rax], rdi\n");
     printf("  push rdi\n");
     return;
+  case ND_BLOCK:
+    while (node->block->len)
+    {
+      Node *sub_node = vec_pop(node->block);
+      gen(sub_node);
+      printf("  pop rax\n");
+    }
+    return;
   }
 
   gen(node->lhs);

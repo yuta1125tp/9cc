@@ -104,5 +104,21 @@ try() {
 #   y=y+1;
 # return i*y;"
 
+#========
+# block
+try 15 "x=0;
+for(i=0;i<10;i=i+1)
+{
+  if (i<5)
+  {
+    x=x+1;
+  }
+  else
+  {
+    x=x+2;
+  }
+}
+return x;"
+
 
 echo OK

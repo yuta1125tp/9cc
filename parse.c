@@ -163,6 +163,16 @@ Node *stmt()
     }
     node->lhs = stmt();
   }
+  else if (consume("{"))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    node->block = new_vec();
+    while (!consume("}"))
+    {
+      vec_push(node->block, stmt());
+    }
+  }
   else
   {
     node = expr();
@@ -357,7 +367,7 @@ void tokenize()
     }
 
     if (
-        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';')
+        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';' || *p == '{' || *p == '}')
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;

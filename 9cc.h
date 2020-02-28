@@ -70,6 +70,7 @@ typedef enum
   ND_IFELSE, // if-else
   ND_WHILE,  // while
   ND_FOR,    // for
+  ND_BLOCK,  // block
 } NodeKind;
 
 typedef struct Node Node;
@@ -85,6 +86,7 @@ struct Node
   Node *condition;    // if while and for
   Node *initialze;    // for
   Node *afterthought; // for and if-else
+  Vector *block;
 };
 
 // トークンの型を表す値
