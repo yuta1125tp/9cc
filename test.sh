@@ -62,16 +62,47 @@ try() {
 # return foo;
 # return bar;"
 
-try 0 "x = 1;
-if (x==4)
-  return x;
-else
-  return 0;"
+##========
+## if and if-else
+# try 0 "x = 1;
+# if (x==4)
+#   return x;
+# else
+#   return 0;"
 
-try 4 "x = 4;
-if (x==4)
-  return x;
-else
-  return 0;"
+# try 4 "x = 4;
+# if (x==4)
+#   return x;
+# else
+#   return 0;"
+
+# try 2 "x = 4;
+# if (x==4)
+#   return 2;
+# return 1;"
+
+# try 1 "x = 4;
+# if (x==4)
+#   return 1;
+# else if (x==2)
+#   return 2;
+# else
+#   return 3;"
+
+# #========
+# # while
+# try 10 "x=0;
+# while(x<10)
+#   x=x+1;
+# return x;
+# "
+
+# #========
+# # for
+# try 100 "y=0;
+# for(i=0;i<10;i=i+1)
+#   y=y+1;
+# return i*y;"
+
 
 echo OK

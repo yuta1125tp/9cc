@@ -132,6 +132,37 @@ Node *stmt()
       node->afterthought = stmt();
     }
   }
+  else if (consume_kind(TK_WHILE))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    expect("(");
+    node->condition = expr();
+    expect(")");
+    node->lhs = stmt();
+  }
+  else if (consume_kind(TK_FOR))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    expect("(");
+    if (!consume(";"))
+    {
+      node->initialze = expr();
+      expect(";");
+    }
+    if (!consume(";"))
+    {
+      node->condition = expr();
+      expect(";");
+    }
+    if (!consume(")"))
+    {
+      node->afterthought = expr();
+      expect(")");
+    }
+    node->lhs = stmt();
+  }
   else
   {
     node = expr();

@@ -14,20 +14,50 @@ void gen_lval(Node *node)
 
 void gen(Node *node)
 {
+  int current_label_idx = label_idx;
+  label_idx += 1;
   switch (node->kind)
   {
   case ND_IF:
-    return;
-  case ND_IFELSE:
-    gen(node->condition); // スタックトップに結果が入っているはず
+    gen(node->condition);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
-    printf("  je .Lelse%03d\n", 1);
+    printf("  je .Lend%03d\n", current_label_idx);
     gen(node->lhs);
-    printf("  jmp .Lend%03d\n", 1);
-    printf(".Lelse%03d:\n", 1);
+    printf(".Lend%03d:\n", current_label_idx);
+    return;
+  case ND_IFELSE:
+    gen(node->condition);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lelse%03d\n", current_label_idx);
+    gen(node->lhs);
+    printf("  jmp .Lend%03d\n", current_label_idx);
+    printf(".Lelse%03d:\n", current_label_idx);
     gen(node->afterthought);
-    printf(".Lend%03d:\n", 1);
+    printf(".Lend%03d:\n", current_label_idx);
+    return;
+  case ND_WHILE:
+    printf(".Lbegin%03d:\n", current_label_idx);
+    gen(node->condition);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%03d\n", current_label_idx);
+    gen(node->lhs);
+    printf("  jmp .Lbegin%03d\n", current_label_idx);
+    printf(".Lend%03d:\n", current_label_idx);
+    return;
+  case ND_FOR:
+    gen(node->initialze);
+    printf(".Lbegin%03d:\n", current_label_idx);
+    gen(node->condition);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%03d\n", current_label_idx);
+    gen(node->lhs);
+    gen(node->afterthought);
+    printf("  jmp .Lbegin%03d\n", current_label_idx);
+    printf(".Lend%03d:\n", current_label_idx);
     return;
   case ND_RETURN:
     gen(node->lhs);

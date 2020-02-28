@@ -14,6 +14,8 @@ Node *code[100];
 
 LVar *locals;
 
+int label_idx;
+
 int main(int argc, char **argv)
 {
   if (argc != 2)
@@ -27,6 +29,8 @@ int main(int argc, char **argv)
   user_input = argv[1];
   tokenize();
   program();
+
+  label_idx = 0;
 
   // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");

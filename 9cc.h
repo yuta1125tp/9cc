@@ -106,3 +106,6 @@ extern Node *code[100];
 
 // ローカル変数
 extern LVar *locals;
+
+// アセンブリ中のラベル
+extern int label_idx;
