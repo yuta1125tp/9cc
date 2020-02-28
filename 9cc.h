@@ -1,3 +1,42 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// コンテナ
+typedef struct Vector Vector;
+
+struct Vector
+{
+  void **data;
+  int capacity;
+  int len;
+};
+
+Vector *new_vec(void);
+void vec_push(Vector *v, void *elem);
+void vec_pushi(Vector *v, int val);
+void *vec_pop(Vector *v);
+void *vec_last(Vector *v);
+bool vec_contains(Vector *v, void *elem);
+bool vec_union1(Vector *v, void *elem);
+
+typedef struct Map Map;
+
+struct Map
+{
+  Vector *keys;
+  Vector *vals;
+};
+
+Map *new_map(void);
+void map_put(Map *map, char *key, void *val);
+void map_puti(Map *map, char *key, int val);
+void *map_get(Map *map, char *key);
+int map_geti(Map *map, char *key, int default_);
+bool map_exists(Map *map, char *key);
+
 // ローカル変数
 typedef struct LVar LVar;
 
