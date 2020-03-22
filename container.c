@@ -43,6 +43,16 @@ void error_at(char *loc, char *fmt, ...)
     }
     p += 1;
   }
+  char msg_header[1024];
+  snprintf(msg_header, sizeof(msg_header), "line:%d:", line_idx);
+  fprintf(stderr, "%s%s\n", msg_header, buffer);
+  fprintf(stderr, "%*s", (int)strlen(msg_header) + pos + 1, ""); // pos個の空白を出力
+  // fprintf(stderr, "%*s", (int)strlen(msg_header), "");
+  fprintf(stderr, "^ ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+
+  exit(1);
 }
 
 // エラーを報告するための関数
@@ -87,6 +97,23 @@ void *vec_pop(Vector *v)
 {
   assert(v->len);
   return v->data[--v->len];
+}
+
+void *vec_get(Vector *v)
+{
+  assert(v->len);
+
+  void *ret = v->data[0];
+
+  Vector *_v = new_vec();
+  for (int i = 1; i < v->len; i++)
+  {
+    vec_push(_v, v->data[i]);
+  }
+  v->data = _v->data;
+  v->capacity = _v->capacity;
+  v->len = _v->len;
+  return ret;
 }
 
 void *vec_last(Vector *v)

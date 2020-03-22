@@ -18,6 +18,7 @@ Vector *new_vec(void);
 void vec_push(Vector *v, void *elem);
 void vec_pushi(Vector *v, int val);
 void *vec_pop(Vector *v);
+void *vec_get(Vector *v);
 void *vec_last(Vector *v);
 bool vec_contains(Vector *v, void *elem);
 bool vec_union1(Vector *v, void *elem);

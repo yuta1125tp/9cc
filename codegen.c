@@ -62,7 +62,7 @@ void gen(Node *node)
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");
-    printf("  mov rsp, rbp\n");
+    printf("  mov rsp, rbp; \n");
     printf("  pop rbp\n");
     printf("  ret\n");
     return;
@@ -86,7 +86,7 @@ void gen(Node *node)
   case ND_BLOCK:
     while (node->block->len)
     {
-      Node *sub_node = vec_pop(node->block);
+      Node *sub_node = vec_get(node->block);
       gen(sub_node);
       printf("  pop rax\n");
     }
