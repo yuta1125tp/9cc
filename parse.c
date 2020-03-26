@@ -311,6 +311,16 @@ Node *primary()
       node->offset = lvar->offset;
       locals = lvar;
     }
+    if (consume("("))
+    {
+      node->kind = ND_FUNCTION;
+      node->arguments = new_vec();
+      while(!consume(")"))
+      {
+        vec_push(node->arguments, expr());
+        consume(",");
+      }
+    }
     return node;
   }
 
@@ -367,7 +377,7 @@ void tokenize()
     }
 
     if (
-        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';' || *p == '{' || *p == '}')
+        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';' || *p == '{' || *p == '}' || *p==',' )
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
