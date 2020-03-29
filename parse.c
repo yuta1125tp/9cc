@@ -268,6 +268,16 @@ Node *unary()
     // -x -> 0-x
     return new_node(ND_SUB, new_node_num(0), primary());
   }
+  else if (consume("*"))
+  {
+    // *x
+    return new_node(ND_DEREF, unary(), NULL);
+  }
+  else if (consume("&"))
+  {
+    // &x
+    return new_node(ND_ADDR, unary(), NULL);
+  }
   return primary();
 }
 
@@ -400,7 +410,9 @@ void tokenize()
         *p == ';' ||
         *p == '{' ||
         *p == '}' ||
-        *p == ',')
+        *p == ',' ||
+        *p == '&' ||
+        *p == '*')
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;

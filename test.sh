@@ -206,35 +206,52 @@ try() {
 # };"
 
 
-# ================
-# fibonacci
-input="
-fibonacci(n)
-{
-    if (n==0)
-    {
-        return n;
-    } else if (n==1)
-    {
-        return n;
-    } else
-    {
-        return fibonacci(n - 2) + fibonacci(n - 1);
-    }
-};
-main()
-{
-    for(i=0;i<10;i=i+1)
-    {
-        print(fibonacci(i));
-    }
-    return 0;
-};"
-./9cc "$input" > tmp.s
-gcc -o tmp tmp.s snippets/function_call/callee.s
-printf "$input => "
-./tmp
+# # ================
+# # fibonacci
+# input="
+# fibonacci(n)
+# {
+#     if (n==0)
+#     {
+#         return n;
+#     } else if (n==1)
+#     {
+#         return n;
+#     } else
+#     {
+#         return fibonacci(n - 2) + fibonacci(n - 1);
+#     }
+# };
+# main()
+# {
+#     for(i=0;i<10;i=i+1)
+#     {
+#         print(fibonacci(i));
+#     }
+#     return 0;
+# };"
+# ./9cc "$input" > tmp.s
+# gcc -o tmp tmp.s snippets/function_call/callee.s
+# printf "$input => "
+# ./tmp
 
+# # ================
+# # * and &
+
+# try 3 "main()
+# {
+#     x = 3;
+#     y = &x;
+#     return *y;
+# };"
+
+try 3 "main()
+{
+    x = 3;
+    y = 5;
+    z = &y + 8;
+    return *z;
+};"
 
 
 echo OK

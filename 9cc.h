@@ -74,6 +74,8 @@ typedef enum
   ND_BLOCK,      // block
   ND_FUNCTION,   // 関数
   ND_DEFINITION, // 関数定義
+  ND_ADDR,       // アドレスを参照する
+  ND_DEREF,      // 参照を返す
 } NodeKind;
 
 typedef struct Node Node;
