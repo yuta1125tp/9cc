@@ -281,6 +281,20 @@ Node *unary()
   return primary();
 }
 
+// 識別子があるか確認する
+// あるなら識別子のトークンを返す。ないならNULLを返す。
+Token *check_identifier(Token *tok)
+{
+  Token *ret;
+  if (tok->kind == TK_INT)
+  {
+    ret = tok;
+    token = token->next;
+    return ret;
+  }
+  return NULL;
+}
+
 Node *primary()
 {
   // 次のトークンが"("なら"(" expr ")"のはず
@@ -290,6 +304,9 @@ Node *primary()
     expect(")");
     return node;
   }
+
+  // 識別子があるか確認する
+  Token *ident = check_identifier(token);
 
   // identかどうか確認する
   Token *tok = consume_ident();
@@ -303,7 +320,7 @@ Node *primary()
     {
       node->offset = lvar->offset;
     }
-    else
+    else if (ident)
     {
       lvar = calloc(1, sizeof(LVar));
       lvar->next = locals;
@@ -320,6 +337,10 @@ Node *primary()
 
       node->offset = lvar->offset;
       locals = lvar;
+    }
+    else
+    {
+      error("未定義の変数です");
     }
     if (consume("("))
     {
@@ -457,6 +478,13 @@ void tokenize()
     if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3]))
     {
       cur = new_token(TK_FOR, cur, p);
+      p += 3;
+      continue;
+    }
+
+    if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3]))
+    {
+      cur = new_token(TK_INT, cur, p);
       p += 3;
       continue;
     }

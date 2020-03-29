@@ -245,12 +245,35 @@ try() {
 #     return *y;
 # };"
 
-try 3 "main()
+# try 3 "main()
+# {
+#     x = 3;
+#     y = 5;
+#     z = &y + 8;
+#     return *z;
+# };"
+
+
+# int x
+try 42 "int main()
 {
-    x = 3;
-    y = 5;
-    z = &y + 8;
-    return *z;
+    int x;
+    x=42;
+    return x;
+};"
+
+try 42 "
+int foo(int x, int y)
+{
+    return x-y;
+};
+int main()
+{
+    int x;
+    x=52;
+    int y;
+    y = foo(x, 10);
+    return y;
 };"
 
 
