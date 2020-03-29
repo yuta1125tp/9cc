@@ -315,12 +315,23 @@ Node *primary()
     {
       node->kind = ND_FUNCTION;
       node->arguments = new_vec();
-      while(!consume(")"))
+      while (!consume(")"))
       {
         vec_push(node->arguments, expr());
         consume(",");
       }
     }
+
+    if (consume("{"))
+    {
+      node->kind = ND_DEFINITION;
+      node->block = new_vec();
+      while (!consume("}"))
+      {
+        vec_push(node->block, stmt());
+      }
+    }
+
     return node;
   }
 
@@ -377,7 +388,19 @@ void tokenize()
     }
 
     if (
-        *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<' || *p == '=' || *p == ';' || *p == '{' || *p == '}' || *p==',' )
+        *p == '+' ||
+        *p == '-' ||
+        *p == '*' ||
+        *p == '/' ||
+        *p == '(' ||
+        *p == ')' ||
+        *p == '>' ||
+        *p == '<' ||
+        *p == '=' ||
+        *p == ';' ||
+        *p == '{' ||
+        *p == '}' ||
+        *p == ',')
     {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;

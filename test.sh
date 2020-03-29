@@ -1,32 +1,32 @@
 #!/bin/bash
 try() {
-  expected="$1"
-  input="$2"
-
-  ./9cc "$input" > tmp.s
-  gcc -o tmp tmp.s
-  ./tmp
-  actual="$?"
-
-  if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
-  else
-    echo "input was $input, $expected expected, but got $actual"
-    exit 1
-  fi
+    expected="$1"
+    input="$2"
+    
+    ./9cc "$input" > tmp.s
+    gcc -o tmp tmp.s
+    ./tmp
+    actual="$?"
+    
+    if [ "$actual" = "$expected" ]; then
+        echo "$input => $actual"
+    else
+        echo "input was $input, $expected expected, but got $actual"
+        exit 1
+    fi
 }
 
-# try 0 "0;"
-# try 42 "42;"
-# try 21 '5+20-4;'
-# try 41 " 12 + 34 - 5; "
+# try 0 "main(){return 0;};"
+# try 42 "main(){return 42;};"
+# try 21 "main(){return 5+20-4;};"
+# try 41 "main(){return  12 + 34 - 5;};"
 
 # try 30 " 12 * 5 - 30; "
 # try 120 " 12 * 5 *2; "
 # try 22 " 12 + 5 *2; "
 # try 34 " ( 12 + 5) *2; "
 # try 10 "-10+20;"
-# try 10 "(-10)+20;"
+# try 10 "main(){(-10)+20;};"
 
 # try 2 "1+(1<10);"
 # try 2 "(1<=10)+1;"
@@ -47,9 +47,23 @@ try() {
 # try 1 "(10==1000)+1;"
 # try 1 "(10!=10)+1;"
 
-# try 14 "a = 3;
-# b = 5 * 6 - 8;
-# a + b / 2;"
+# try 3 "main(){
+#     a = 3;
+#     return a;
+# };"
+
+
+# try 4 "main(){
+#     a = 3;
+#     b = 1;
+#     return a+b;
+# };"
+
+# try 14 "main(){
+#     a = 3;
+#     b = 5 * 6 - 8;
+#     return a + b / 2;
+# };"
 
 # try 14 "foo = 3;
 # bar = 5 * 6 - 8;
@@ -106,44 +120,116 @@ try() {
 
 # #========
 # # block
-# try 17 "x=0;
-# for(i=0;i<10;i=i+1)
+# try 17 "
+# main(){
+#     x=0;
+#     for(i=0;i<10;i=i+1)
+#     {
+#         j=i*2;
+#         if (j<5)
+#         {
+#             x=x+1;
+#         }
+#         else
+#         {
+#             x=x+2;
+#         }
+#         j=0;
+#     }
+#     return x;
+# };
+# "
+
+# #========
+# # function call 1
+# input="func0();
+# return 0;"
+# ./9cc "$input" > tmp.s
+# gcc -o tmp tmp.s snippets/function_call/callee.s
+# printf "$input => "
+# ./tmp
+
+# #========
+# # function call 2
+# input="func1(3);
+# return 0;"
+# ./9cc "$input" > tmp.s
+# gcc -o tmp tmp.s snippets/function_call/callee.s
+# printf "$input => "
+# ./tmp
+
+# #========
+# # function call 2
+# input="main(){
+#     func2(3,6);
+#     return 0;
+# };"
+# ./9cc "$input" > tmp.s
+# gcc -o tmp tmp.s snippets/function_call/callee.s
+# printf "$input => "
+# ./tmp
+
+# ========
+# function
+# try 6 "main(){
+#     y=1;
+#     x=2;
+#     return (x+y)*2;
+# };"
+
+# try 1 "foo()
 # {
-#   j=i*2;
-#   if (j<5)
-#   {
-#     x=x+1;
-#   }
-#   else
-#   {
-#     x=x+2;
-#   }
-#   j=0;
-# }
-# return x;"
+#     return 1;
+# };
+# main()
+# {
+#     return foo();
+# };"
 
-#========
-# function call 1
-input="func0();
-return 0;"
-./9cc "$input" > tmp.s
-gcc -o tmp tmp.s snippets/function_call/callee.s
-printf "$input => "
-./tmp
+# try 10 "times2(i)
+# {
+#     return i*2;
+# };
+# main()
+# {
+#     return times2(5);
+# };"
 
-#========
-# function call 2
-input="func1(3);
-return 0;"
-./9cc "$input" > tmp.s
-gcc -o tmp tmp.s snippets/function_call/callee.s
-printf "$input => "
-./tmp
 
-#========
-# function call 2
-input="func2(3,6);
-return 0;"
+# try 3 "minus(i,j)
+# {
+#     return i-j;
+# };
+# main()
+# {
+#     return minus(9,6);
+# };"
+
+
+# ================
+# fibonacci
+input="
+fibonacci(n)
+{
+    if (n==0)
+    {
+        return n;
+    } else if (n==1)
+    {
+        return n;
+    } else
+    {
+        return fibonacci(n - 2) + fibonacci(n - 1);
+    }
+};
+main()
+{
+    for(i=0;i<10;i=i+1)
+    {
+        print(fibonacci(i));
+    }
+    return 0;
+};"
 ./9cc "$input" > tmp.s
 gcc -o tmp tmp.s snippets/function_call/callee.s
 printf "$input => "

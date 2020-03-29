@@ -20,7 +20,7 @@ void cmp(char *a, char *b)
 
 void mov(char *to, char *from)
 {
-  printf("  mov %s, %s # %sから%sにコピー\n", to, from, to, from);
+  printf("  mov %s, %s # %sに%sからコピー\n", to, from, to, from);
 }
 
 void mov1(char *to_with_brackets, char *from)
@@ -48,9 +48,25 @@ void gen_lval(Node *node)
   push("rax");
 }
 
+LVar *find_lvar_by_node(Node *node)
+{
+  LVar *a = locals;
+  int offset = node->offset;
+  while (a)
+  {
+    if (a->offset == node->offset)
+      return a;
+    a = a->next;
+  }
+  return NULL;
+}
+
 void gen(Node *node)
 {
+  int offset = 0;
   int num_args = 0;
+  int arg_idx = 0;
+  LVar *_lvar;
   int current_label_idx = label_idx;
   label_idx += 1;
   switch (node->kind)
@@ -97,8 +113,9 @@ void gen(Node *node)
     printf(".Lend%03d:\n", current_label_idx);
     return;
   case ND_RETURN:
+    printf("  # return;\n");
     gen(node->lhs);
-    pop("rax");
+    pop("rax"); // スタックトップの値をraxにコピー
     mov("rsp", "rbp");
     pop("rbp");
     printf("  ret\n");
@@ -109,7 +126,7 @@ void gen(Node *node)
     {
       gen(vec_pop(node->arguments));
     }
-    int arg_idx = 0;
+    arg_idx = 0;
     while (arg_idx++ < num_args)
     {
       switch (arg_idx)
@@ -138,10 +155,76 @@ void gen(Node *node)
       }
     }
     // printf("  sub rsp, %d\n", 8);
+    _lvar = find_lvar_by_node(node);
     printf(
         "  call %.*s\n",
-        locals[(locals->offset - node->offset) / 8].len,
-        locals[(locals->offset - node->offset) / 8].name);
+        _lvar->len,
+        _lvar->name);
+    push("rax"); // callした返り値がraxにあるので、スタックトップにプッシュする
+    return;
+  case ND_DEFINITION:
+    _lvar = find_lvar_by_node(node);
+    printf("  .global %.*s\n",
+           _lvar->len,
+           _lvar->name);
+    printf("  .type	%.*s, @function\n",
+           _lvar->len,
+           _lvar->name);
+    printf("%.*s:\n",
+           _lvar->len,
+           _lvar->name);
+    printf(".LFB%d:\n", label_idx);
+
+    // プロローグ
+    printf("  # プロローグ\n");
+    printf("  push rbp # スタックにベースポインタをpush\n");
+    printf("  mov rbp, rsp # スタックポインタをベースポインタにコピー\n");
+    printf("  sub rsp, 1024 # 変数128個分の領域を確保する\n");
+
+    num_args = node->arguments->len;
+    arg_idx = 0;
+    while (arg_idx++ < num_args)
+    {
+      gen_lval(vec_get(node->arguments));
+      pop("rax");
+      switch (arg_idx)
+      {
+      case 1:
+        mov1("rax", "rdi");
+        break;
+      case 2:
+        mov1("rax", "rsi");
+        break;
+      case 3:
+        push("rdx");
+        break;
+      case 4:
+        push("rcx");
+        break;
+      case 5:
+        push("r8");
+        break;
+      case 6:
+        push("r9");
+        break;
+      default:
+        error("6つ以上の引数はサポートしていません。");
+        break;
+      }
+    }
+
+    while (node->block->len)
+    {
+      Node *sub_node = vec_get(node->block);
+      gen(sub_node);
+    }
+
+    // エピローグ
+    // 最後の式の結果がRAXに残っているので、それを返り値する。
+    printf("  # エピローグ\n");
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
     return;
   case ND_NUM:
     printf("  push %d\n", node->val);
@@ -179,10 +262,10 @@ void gen(Node *node)
   switch (node->kind)
   {
   case ND_ADD:
-    printf("  add rax, rdi\n");
+    printf("  add rax, rdi # 第1オペラントと第2オペラントを足して第1オペラントに格納する\n");
     break;
   case ND_SUB:
-    printf("  sub rax, rdi\n");
+    printf("  sub rax, rdi # 第1オペラントから第2オペラントを引いて第1オペラントに格納する\n");
     break;
   case ND_MUL:
     printf("  imul rax, rdi\n");

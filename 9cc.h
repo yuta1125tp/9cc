@@ -53,26 +53,27 @@ struct LVar
 // 抽象構文木のノードの種類
 typedef enum
 {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_LES,    // <
-  ND_GRE,    // >
-  ND_LEQ,    // <=
-  ND_GEQ,    // >=
-  ND_EQU,    // ==
-  ND_NEQ,    // !=
-  ND_NUM,    // 整数
-  ND_ASSIGN, // =
-  ND_LVAR,   // ローカル変数
-  ND_RETURN, // return
-  ND_IF,     // if
-  ND_IFELSE, // if-else
-  ND_WHILE,  // while
-  ND_FOR,    // for
-  ND_BLOCK,  // block
-  ND_FUNCTION, // 関数
+  ND_ADD,        // +
+  ND_SUB,        // -
+  ND_MUL,        // *
+  ND_DIV,        // /
+  ND_LES,        // <
+  ND_GRE,        // >
+  ND_LEQ,        // <=
+  ND_GEQ,        // >=
+  ND_EQU,        // ==
+  ND_NEQ,        // !=
+  ND_NUM,        // 整数
+  ND_ASSIGN,     // =
+  ND_LVAR,       // ローカル変数
+  ND_RETURN,     // return
+  ND_IF,         // if
+  ND_IFELSE,     // if-else
+  ND_WHILE,      // while
+  ND_FOR,        // for
+  ND_BLOCK,      // block
+  ND_FUNCTION,   // 関数
+  ND_DEFINITION, // 関数定義
 } NodeKind;
 
 typedef struct Node Node;
@@ -89,7 +90,7 @@ struct Node
   Node *initialze;    // for
   Node *afterthought; // for and if-else
   Vector *block;
-  Vector *arguments;   // 関数で使う
+  Vector *arguments; // 関数で使う
 };
 
 // トークンの型を表す値
