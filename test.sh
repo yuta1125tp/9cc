@@ -254,26 +254,48 @@ try() {
 # };"
 
 
-# int x
-try 42 "int main()
-{
-    int x;
-    x=42;
-    return x;
-};"
+# # int x
+# try 42 "int main()
+# {
+#     int x;
+#     x=42;
+#     return x;
+# };"
 
-try 42 "
-int foo(int x, int y)
-{
-    return x-y;
-};
+# try 42 "
+# int foo(int x, int y)
+# {
+#     return x-y;
+# };
+# int main()
+# {
+#     int x;
+#     x=52;
+#     int y;
+#     y = foo(x, 10);
+#     return y;
+# };"
+
+try 3 "
 int main()
 {
     int x;
-    x=52;
-    int y;
-    y = foo(x, 10);
-    return y;
+    int *y;
+    y = &x;
+    *y = 3;
+    return x;
+};"
+
+try 3 "
+int main()
+{
+    int x;
+    int *y;
+    int **z;
+    y = &x;
+    z = &y;
+    **z = 3;
+    return x;
 };"
 
 

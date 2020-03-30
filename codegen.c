@@ -40,12 +40,21 @@ void mov3(char *to_with_brackets, char *from_with_brackets)
 
 void gen_lval(Node *node)
 {
-  if (node->kind != ND_LVAR)
-    error("代入の左辺値が変数ではありません");
-
-  mov("rax", "rbp");
-  printf("  sub rax, %d\n", node->offset);
-  push("rax");
+  if (node->kind == ND_LVAR)
+  {
+    // x
+    mov("rax", "rbp");
+    printf("  sub rax, %d\n", node->offset);
+    push("rax");
+    return;
+  }
+  else if (node->kind == ND_DEREF)
+  {
+    // *x
+    gen(node->lhs);
+    return;
+  }
+  error("代入の左辺値が変数ではありません");
 }
 
 LVar *find_lvar_by_node(Node *node)

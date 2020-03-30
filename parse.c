@@ -283,16 +283,28 @@ Node *unary()
 
 // 識別子があるか確認する
 // あるなら識別子のトークンを返す。ないならNULLを返す。
-Token *check_identifier(Token *tok)
+Type *check_type()
 {
-  Token *ret;
-  if (tok->kind == TK_INT)
+  Type *type = NULL;
+  while (1)
   {
-    ret = tok;
-    token = token->next;
-    return ret;
+    if (consume_kind(TK_INT))
+    {
+      type = calloc(1, sizeof(Type));
+      type->ty = INT;
+      continue;
+    }
+    else if (consume("*"))
+    {
+      Type *ptype = calloc(1, sizeof(Type));
+      ptype->ty = PTR;
+      ptype->ptr_to = type;
+      type = ptype;
+      continue;
+    }
+    break;
   }
-  return NULL;
+  return type;
 }
 
 Node *primary()
@@ -306,7 +318,7 @@ Node *primary()
   }
 
   // 識別子があるか確認する
-  Token *ident = check_identifier(token);
+  Type *type = check_type(token);
 
   // identかどうか確認する
   Token *tok = consume_ident();
@@ -320,7 +332,7 @@ Node *primary()
     {
       node->offset = lvar->offset;
     }
-    else if (ident)
+    else if (type)
     {
       lvar = calloc(1, sizeof(LVar));
       lvar->next = locals;
@@ -334,6 +346,7 @@ Node *primary()
       {
         lvar->offset = 8;
       }
+      lvar->type = type;
 
       node->offset = lvar->offset;
       locals = lvar;

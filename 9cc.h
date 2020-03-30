@@ -5,6 +5,20 @@
 #include <string.h>
 
 // コンテナ
+typedef enum DataType
+{
+  INT, // int
+  PTR  // pointer
+} DataType;
+
+typedef struct Type Type;
+
+struct Type
+{
+  DataType ty;
+  struct Type *ptr_to;
+};
+
 typedef struct Vector Vector;
 
 struct Vector
@@ -48,10 +62,11 @@ struct LVar
   char *name; // 変数の名前
   int len;    // 名前の長さ
   int offset; // RBPからのオフセット
+  Type *type; // 変数の型;
 };
 
 // 抽象構文木のノードの種類
-typedef enum
+typedef enum NodeKind
 {
   ND_ADD,        // +
   ND_SUB,        // -
@@ -96,7 +111,7 @@ struct Node
 };
 
 // トークンの型を表す値
-typedef enum
+typedef enum TokenKind
 {
   TK_RESERVED, // 記号
   TK_IDENT,    // 識別子
