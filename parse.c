@@ -67,7 +67,7 @@ bool consume_kind(int token_kind)
 void expect(char *op)
 {
   if (!check_next(op))
-    error_at(token->str, "'%c'ではありません", &op);
+    error_at(token->str, "'%s'ではありません", op);
   token = token->next;
 }
 
