@@ -185,7 +185,11 @@ Node *stmt()
   else
   {
     node = expr();
-    expect(";");
+    if (node->kind != ND_DEFINITION)
+    {
+      // 関数定義でないexpr()なら末尾に;が必要
+      expect(";");
+    }
   }
 
   return node;
