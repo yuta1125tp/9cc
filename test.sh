@@ -16,6 +16,23 @@ try() {
     fi
 }
 
+try_with_helper() {
+    expected="$1"
+    input="$2"
+    
+    ./9cc "$input" > tmp.s
+    gcc -o tmp tmp.s snippets/function_call/callee.s
+    ./tmp
+    actual="$?"
+    
+    if [ "$actual" = "$expected" ]; then
+        echo "$input => $actual"
+    else
+        echo "input was $input, $expected expected, but got $actual"
+        exit 1
+    fi
+}
+
 # try 0 "main(){return 0;};"
 # try 42 "main(){return 42;};"
 # try 21 "main(){return 5+20-4;};"
@@ -276,27 +293,56 @@ try() {
 #     return y;
 # };"
 
-try 3 "
+# # =============
+# # ポインタ型
+# try 3 "
+# int main()
+# {
+#     int x;
+#     int *y;
+#     y = &x;
+#     *y = 3;
+#     return x;
+# };"
+
+# try 3 "
+# int main()
+# {
+#     int x;
+#     int *y;
+#     int **z;
+#     y = &x;
+#     z = &y;
+#     **z = 3;
+#     return x;
+# };"
+
+# ================
+# ポインタの加算減算
+try_with_helper 4 "
+int alloc4(int **ptr, int i0, int i1, int i2, int i3);
+
 int main()
 {
-    int x;
-    int *y;
-    y = &x;
-    *y = 3;
-    return x;
+    int *p;
+    alloc4(&p, 1, 2, 4, 8);
+    int *q;
+    q = p + 2;
+    return *q;
 };"
 
-try 3 "
+try_with_helper 8 "
+int alloc4(int **ptr, int i0, int i1, int i2, int i3);
+
 int main()
 {
-    int x;
-    int *y;
-    int **z;
-    y = &x;
-    z = &y;
-    **z = 3;
-    return x;
+    int *p;
+    alloc4(&p, 1, 2, 4, 8);
+    int *q;
+    q = p + 2;
+    *q;
+    q = p + 3;
+    return *q;
 };"
-
 
 echo OK

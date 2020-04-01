@@ -33,11 +33,20 @@ Node *new_node_num(int val)
   return node;
 }
 
+// 次のトークンが期待している記号のときには真を返し、それ以外の場合には偽を返す。
+// いずれにせよトークンは進めない
+bool check_next(char *op)
+{
+  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+    return false;
+  return true;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+  if (!check_next(op))
     return false;
   token = token->next;
   return true;
@@ -57,7 +66,7 @@ bool consume_kind(int token_kind)
 // それ以外の場合にはエラーを報告する。
 void expect(char *op)
 {
-  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+  if (!check_next(op))
     error_at(token->str, "'%c'ではありません", &op);
   token = token->next;
 }
@@ -330,9 +339,12 @@ Node *primary()
     LVar *lvar = find_lvar(tok);
     if (lvar)
     {
+      // 定義済みの変数か関数
       node->offset = lvar->offset;
     }
-    else if (type)
+    else if (
+        type ||          // 新しく定義する変数か関数
+        check_next("(")) // 未定義の関数呼び出し
     {
       lvar = calloc(1, sizeof(LVar));
       lvar->next = locals;
@@ -364,15 +376,14 @@ Node *primary()
         vec_push(node->arguments, expr());
         consume(",");
       }
-    }
-
-    if (consume("{"))
-    {
-      node->kind = ND_DEFINITION;
-      node->block = new_vec();
-      while (!consume("}"))
+      if (consume("{"))
       {
-        vec_push(node->block, stmt());
+        node->kind = ND_DEFINITION;
+        node->block = new_vec();
+        while (!consume("}"))
+        {
+          vec_push(node->block, stmt());
+        }
       }
     }
 

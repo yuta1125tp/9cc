@@ -57,6 +57,8 @@ void gen_lval(Node *node)
   error("代入の左辺値が変数ではありません");
 }
 
+// nodeのoffsetに対応する変数をlocalsから探してくる。
+// 見つからない場合はNULLを返す
 LVar *find_lvar_by_node(Node *node)
 {
   LVar *a = locals;
@@ -68,6 +70,27 @@ LVar *find_lvar_by_node(Node *node)
     a = a->next;
   }
   return NULL;
+}
+
+// add/sub用に用意した値をスタックトップに退避させ、
+// 第2オペラントをN倍して
+// 再度raxとrdiに値を用意する。
+void pointer_add_sub_preproc(int times)
+{
+  // 用意したraxとrdiをスタックに退避
+  push("rax");
+  push("rdi");
+
+  // 第2オペラント（rdi）をtimes倍する
+  printf("  push %d\n", times);
+  pop("rdi");
+  pop("rax");
+  printf("  imul rax, rdi\n");
+
+  // 元の第1オペラントとtimes倍した第2オペラントをraxとrdiに戻す
+  push("rax");
+  pop("rdi");
+  pop("rax");
 }
 
 void gen(Node *node)
@@ -280,13 +303,51 @@ void gen(Node *node)
   switch (node->kind)
   {
   case ND_ADD:
+    _lvar = find_lvar_by_node(node->lhs);
+    if (_lvar->type->ty == PTR)
+    {
+      // ポインタ型に対する足し算の場合
+      if (_lvar->type->ptr_to->ty == INT)
+      {
+        // intを指すポインタなら+1ごとに+4する
+        pointer_add_sub_preproc(4);
+      }
+      else if (_lvar->type->ptr_to->ty == PTR)
+      {
+        // intを指すポインタへのポインタなら+1ごとに+8する
+        pointer_add_sub_preproc(8);
+      }
+      else
+      {
+        error("未定義のポインタへの加算です。");
+      }
+    }
     printf("  add rax, rdi # 第1オペラントと第2オペラントを足して第1オペラントに格納する\n");
     break;
   case ND_SUB:
+    _lvar = find_lvar_by_node(node->lhs);
+    if (_lvar->type->ty == PTR)
+    {
+      // ポインタ型に対する引き算の場合
+      if (_lvar->type->ptr_to->ty == INT)
+      {
+        // intを指すポインタなら-1ごとに-4する
+        pointer_add_sub_preproc(4);
+      }
+      else if (_lvar->type->ptr_to->ty == PTR)
+      {
+        // intを指すポインタへのポインタなら-1ごとに-8する
+        pointer_add_sub_preproc(8);
+      }
+      else
+      {
+        error("未定義のポインタへの減算です。");
+      }
+    }
     printf("  sub rax, rdi # 第1オペラントから第2オペラントを引いて第1オペラントに格納する\n");
     break;
   case ND_MUL:
-    printf("  imul rax, rdi\n");
+    printf("  imul rax, rdi # 第1オペラントと第2オペラントを掛けて第1オペラントに格納する\n");
     break;
   case ND_DIV:
     printf("  cqo\n");
